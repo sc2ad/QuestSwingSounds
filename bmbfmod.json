@@ -1,0 +1,25 @@
+{
+    "id": "SwingSounds",
+    "name": "Swing Sounds",
+    "author": "Sc2ad",
+    "description": [
+        
+        "Adds Saber swing sounds to sabers travelling over a certain speed. Configurable."
+        
+    ],
+    "category": "Gameplay",
+    "gameVersion": "1.8.0",
+    "version": "0.1.0",
+    "platform": "Quest",
+    "components": [
+        {
+            "type": "HookMod",
+            "installAction": {
+                "installLibraryFile": "libswingsounds.so"
+            },
+            "uninstallAction": {
+                "removeLibraryFile": "libswingsounds.so"
+            }
+        }
+    ]
+}
