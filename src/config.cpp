@@ -1,7 +1,10 @@
 #include "../include/config.hpp"
-#include "../extern/beatsaber-hook/shared/utils/logging.h"
-#include "../extern/beatsaber-hook/rapidjson/include/rapidjson/allocators.h"
-#include "../extern/beatsaber-hook/rapidjson/include/rapidjson/document.h"
+#include "../extern/beatsaber-hook/shared/utils/logging.hpp"
+#include "../extern/beatsaber-hook/shared/rapidjson/include/rapidjson/allocators.h"
+#include "../extern/beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
+#include "main.hpp"
+
+#define SOUND_PATH "/sdcard/Android/data/%s/files/slice_sounds/oneRandomSound.ogg"
 
 std::vector<std::string> getAudioPaths(rapidjson::Value& arr) {
     std::vector<std::string> out;
@@ -58,7 +61,7 @@ SliceSoundConfig ConfigHelper::LoadConfig(ConfigDocument& config) {
 }
 
 void SliceSoundConfig::WriteToConfig(ConfigDocument& config) {
-    log(DEBUG, "Starting to write to config");
+    logger().debug("Starting to write to config");
     config.SetObject();
     config.RemoveAllMembers();
     rapidjson::MemoryPoolAllocator<>& allocator = config.GetAllocator();
@@ -83,16 +86,16 @@ void SliceSoundConfig::WriteToConfig(ConfigDocument& config) {
     config.AddMember("playBuffered", playBuffered, allocator);
     config.AddMember("playFirst", playFirst, allocator);
     config.AddMember("randomize", randomize, allocator);
-    log(DEBUG, "Wrote config to document!");
+    logger().debug("Wrote config to document!");
 }
 
 void SliceSoundConfig::SetToDefault() {
-    log(DEBUG, "Setting config to default!");
+    logger().debug("Setting config to default!");
     majorVersion = 0;
     minorVersion = 1;
     patchVersion = 0;
     enabled = true;
-    audioPaths = std::vector<std::string>({std::string("/sdcard/Android/data/com.beatgames.beatsaber/files/slice_sounds/oneRandomSound.ogg")});
+    audioPaths = std::vector<std::string>({string_format(SOUND_PATH, Modloader::getApplicationId().c_str())});
     weights = std::vector<int>();
     speedThreshold = 0;
     volume = 0.8;
@@ -100,5 +103,5 @@ void SliceSoundConfig::SetToDefault() {
     playBuffered = true;
     playFirst = false;
     randomize = false;
-    log(DEBUG, "Set to default!");
+    logger().debug("Set to default!");
 }

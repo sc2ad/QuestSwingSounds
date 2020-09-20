@@ -1,6 +1,7 @@
 #include "../include/config.hpp"
 #include "../include/main.hpp"
-#include "../extern/beatsaber-hook/shared/utils/logging.h"
+#include "beatsaber-hook/shared/utils/logging.hpp"
+#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
 
 std::vector<Il2CppObject*> AudioManager::loadedAudioClips;
 
@@ -17,50 +18,35 @@ int AudioManager::getAudioType(std::string path) {
 }
 
 void AudioManager::audioClipLoaded(Il2CppObject* webRequest) {
-    Il2CppObject* audioClip;
-    if (il2cpp_utils::RunMethod(&audioClip, il2cpp_utils::GetClassFromName("UnityEngine.Networking", "DownloadHandlerAudioClip"), "GetContent", webRequest)) {
-        loadedAudioClips.push_back(audioClip);
-    } else {
-        log(ERROR, "Could not GetContent from AudioClip!");
-    }
+    auto* audioClip = CRASH_UNLESS(il2cpp_utils::RunMethod("UnityEngine.Networking", "DownloadHandlerAudioClip", "GetContent", webRequest));
+    CRASH_UNLESS(audioClip);
+    loadedAudioClips.push_back(audioClip);
 }
 
 bool AudioManager::loadAudioClip(std::string path) {
-    log(INFO, "Loading clip: %s", path.data());
+    logger().info("Loading clip: %s", path.data());
     if (!fileexists(path.data())) {
-        log(ERROR, "File: %s does not exists!", path.data());
+        logger().error("File: %s does not exists!", path.data());
         return false;
     }
     auto audioType = getAudioType(path);
-    log(INFO, "Audio type: %d", audioType);
+    logger().info("Audio type: %d", audioType);
     auto requestPath = il2cpp_utils::createcsstr("file:///" + path);
-    Il2CppObject* webRequest;
-    if (!il2cpp_utils::RunMethod(&webRequest, il2cpp_utils::GetClassFromName("UnityEngine.Networking", "UnityWebRequestMultimedia"), "GetAudioClip", requestPath, audioType)) {
-        log(ERROR, "Could not run GetAudioClip on request: %s", to_utf8(csstrtostr(requestPath)).data());
-        return false;
-    }
+    auto* webRequest = CRASH_UNLESS(il2cpp_utils::RunMethod("UnityEngine.Networking", "UnityWebRequestMultimedia", "GetAudioClip", requestPath, audioType));
     static auto actionType = il2cpp_functions::class_get_type(il2cpp_utils::GetClassFromName("System", "Action"));
-    auto action = il2cpp_utils::MakeAction(webRequest, audioClipLoaded, actionType);
-    if (action == nullptr) {
-        log(ERROR, "Could not create action!");
-        return false;
-    }
-    Il2CppObject* asyncOperation;
-    if (!il2cpp_utils::RunMethod(&asyncOperation, webRequest, "SendWebRequest")) {
-        log(ERROR, "Could not send web request!");
-        return false;
-    }
+    auto action = CRASH_UNLESS(il2cpp_utils::MakeAction(actionType, webRequest, audioClipLoaded));
+    Il2CppObject* asyncOperation = CRASH_UNLESS(il2cpp_utils::RunMethod(webRequest, "SendWebRequest"));
     if (!il2cpp_utils::SetFieldValue(asyncOperation, "m_completeCallback", action))
     {
-        log(ERROR, "Couldn't set completeCallback action!");
+        logger().error("Couldn't set completeCallback action!");
         return false;
     }
-    log(INFO, "Began loading audio clip!");
+    logger().info("Began loading audio clip!");
     return true;
 }
 
 Il2CppObject* AudioManager::GetNextAudioClip() {
-    log(INFO, "Getting next AudioClip! enabled: %s", config.enabled ? "true" : "false");
+    logger().info("Getting next AudioClip! enabled: %s", config.enabled ? "true" : "false");
     if (!config.enabled) {
         return nullptr;
     }
@@ -105,7 +91,7 @@ Il2CppObject* AudioManager::GetNextAudioClip() {
 
 // Creates webrequests for obtaining each AudioClip
 bool AudioManager::LoadAllAudio() {
-    log(INFO, "Loading all audio!");
+    logger().info("Loading all audio!");
     if (!config.enabled) {
         return true;
     }
@@ -118,20 +104,20 @@ bool AudioManager::LoadAllAudio() {
 }
 
 void AudioManager::Initialize() {
-    log(DEBUG, "Initializing AudioManager!");
+    logger().debug("Initializing AudioManager!");
     currentClipIndex = 0;
     checkedWeights = false;
-    log(DEBUG, "Loading config!");
-    Configuration::Load();
-    config = ConfigHelper::LoadConfig(Configuration::config);
-    log(DEBUG, "Loaded config!");
-    log(DEBUG, "Completed Initialization of AudioManager!");
+    logger().debug("Loading config!");
+    getConfig().Load();
+    config = ConfigHelper::LoadConfig(getConfig().config);
+    logger().debug("Loaded config!");
+    logger().debug("Completed Initialization of AudioManager!");
 }
 
 void AudioManager::Reload() {
-    log(DEBUG, "Reloading config!");
-    Configuration::Load();
-    config = ConfigHelper::LoadConfig(Configuration::config);
-    config.WriteToConfig(Configuration::config);
-    log(DEBUG, "Reloaded config!");
+    logger().debug("Reloading config!");
+    getConfig().Reload();
+    config = ConfigHelper::LoadConfig(getConfig().config);
+    config.WriteToConfig(getConfig().config);
+    logger().debug("Reloaded config!");
 }

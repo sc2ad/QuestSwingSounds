@@ -12,39 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 LOCAL_PATH := $(call my-dir)
-
 TARGET_ARCH_ABI := arm64-v8a
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := hook
-
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
+# Creating prebuilt for dependency: beatsaber-hook - version: 0.6.0
 include $(CLEAR_VARS)
-LOCAL_LDLIBS     := -llog
-LOCAL_CFLAGS     := -D"MOD_ID=\"SwingSounds\"" -D"VERSION=\"0.1.0\"" -D"FILE_LOG"
+LOCAL_MODULE := beatsaber-hook_0_6_0
+LOCAL_EXPORT_C_INCLUDES := extern/beatsaber-hook
+LOCAL_SRC_FILES := extern/libbeatsaber-hook_0_6_0.so
+include $(PREBUILT_SHARED_LIBRARY)
+# Creating prebuilt for dependency: modloader - version: 1.0.2
+include $(CLEAR_VARS)
+LOCAL_MODULE := modloader
+LOCAL_EXPORT_C_INCLUDES := extern/modloader
+LOCAL_SRC_FILES := extern/libmodloader.so
+include $(PREBUILT_SHARED_LIBRARY)
+# Creating prebuilt for dependency: custom-ui - version: 0.1.1
+include $(CLEAR_VARS)
+LOCAL_MODULE := custom-ui_0_1_1
+LOCAL_EXPORT_C_INCLUDES := extern/custom-ui
+LOCAL_SRC_FILES := extern/libcustom-ui_0_1_1.so
+include $(PREBUILT_SHARED_LIBRARY)
 
-BS_VERSION := $(shell adb shell "dumpsys package com.beatgames.beatsaber | grep versionName | cut -d'=' -f2-")
-$(info Beatsaber version $(BS_VERSION) detected.)
-UNITY_2019 := $(shell adb shell "echo -e '1.7.1\n$(BS_VERSION)'|sort -bcf 2>/dev/null && echo YES")  # `sort -c` returns success if the passed "list" is already sorted
-ifneq ($(strip $(UNITY_2019)),)
-    $(info Using Unity 2019.3.2f1 headers)
-    LOCAL_CFLAGS += -I"C:\Program Files\Unity\Editor\Data\il2cpp\libil2cpp"
-else
-    $(info Using Unity 2018.4.4f1 headers)
-    LOCAL_CFLAGS += -I"C:\Program Files\Unity\Editor\Data\il2cpp\libil2cpp"
-endif
-
-LOCAL_MODULE     := swingsounds
-LOCAL_CPPFLAGS   := -std=c++2a
-LOCAL_C_INCLUDES := ./include ./src
-LOCAL_SRC_FILES  := $(call rwildcard,extern/beatsaber-hook/shared/inline-hook/,*.cpp) $(call rwildcard,extern/beatsaber-hook/shared/utils/,*.cpp) $(call rwildcard,extern/beatsaber-hook/shared/inline-hook/,*.c)
-# In order to add configuration support to your project, uncomment the following line:
-LOCAL_SRC_FILES  += $(call rwildcard,extern/beatsaber-hook/shared/config/,*.cpp)
-# In order to add custom UI support to your project, uncomment the following line:
-LOCAL_SRC_FILES  += $(call rwildcard,extern/beatsaber-hook/shared/customui/,*.cpp)
-# Add any new SRC includes from beatsaber-hook or other external libraries here
-LOCAL_SRC_FILES  += $(call rwildcard,src/,*.cpp)
+include $(CLEAR_VARS)
+LOCAL_MODULE := SwingSounds_0_3_0
+LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/shared/inline-hook/,*.cpp)
+LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/shared/inline-hook/,*.c)
+LOCAL_SRC_FILES += $(call rwildcard,src/,*.cpp)
+LOCAL_SHARED_LIBRARIES += beatsaber-hook_0_6_0
+LOCAL_SHARED_LIBRARIES += modloader
+LOCAL_SHARED_LIBRARIES += custom-ui_0_1_1
+LOCAL_LDLIBS += -llog
+LOCAL_CFLAGS += -D"FILE_LOG" -I"extern/libil2cpp/il2cpp/libil2cpp" -DID='"SwingSounds"' -DVERSION='"0.3.0"' -I'./shared' -I'./extern'
+LOCAL_CPPFLAGS += -std=c++2a
+LOCAL_C_INCLUDES += ./include ./src
 include $(BUILD_SHARED_LIBRARY)

@@ -1,10 +1,13 @@
 #pragma once
 #include <dlfcn.h>
-#include "../extern/beatsaber-hook/shared/utils/logging.h"
+#include "../extern/beatsaber-hook/shared/utils/logging.hpp"
 #include "config.hpp"
 #include "../extern/beatsaber-hook/shared/utils/utils.h"
+#include "beatsaber-hook/shared/config/config-utils.hpp"
+#include "beatsaber-hook/shared/utils/typedefs.h"
 
-extern "C" void load();
+Configuration& getConfig();
+const Logger& logger();
 
 class SliceSoundConfig;
 
@@ -17,9 +20,9 @@ class AudioManager {
         bool LoadAllAudio();
         Il2CppObject* GetNextAudioClip();
     private:
-        int currentClipIndex;
+        int currentClipIndex = 0;
         int weightSum = -1;
-        bool checkedWeights;
+        bool checkedWeights = false;
         static std::vector<Il2CppObject*> loadedAudioClips;
 
         bool loadAudioClip(std::string path);
